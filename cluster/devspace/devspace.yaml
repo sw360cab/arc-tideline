@@ -1,0 +1,137 @@
+version: v2beta1
+name: arc-install
+
+vars:
+  DEVSPACE_ENV_FILE: ".env"
+  GITHUB_CONFIG_URL:
+    source: env
+    default: https://github.com/sw360cab/arc-test0
+  ARC_HELM_CHART_VERSION: 0.14.0
+  DAGGER_HELM_CHART_VERSION: 0.19.6
+  ARC_RUNNER_SIZE_M: medium
+  ARC_RUNNER_SIZE_L: large
+  ARC_RUNNER_SIZE_XL: xlarge
+
+pipelines:
+  # run this pipeline via `devspace deploy` or `devspace run-pipeline deploy`
+  # Static ARC Runner - Test Env
+  deploy: |-
+    create_deployments arc-controller arc-runner dagger
+  # Need to deploy karpenter and then arc-runner releases for each size
+  # Dynamic ARC Runners
+  deploy-prod: |-
+    create_deployments arc-controller dagger karpenter-node-pools buildkit
+    run_pipelines deploy-dynamic-arc-runners
+    echo "Karpenter deployment added to basic ones in prod"
+  # deploy arc runners dynamically according to the given sizes
+  deploy-dynamic-arc-runners:
+    run: |-
+      #!/bin/bash
+      set -e
+      
+      echo "Deploying multiple Arc Runner releases using different values files coming from a local Chart"
+      
+      for size_env in $(printenv | grep '^ARC_RUNNER_SIZE_'); do
+        size="$(echo $size_env | cut -d= -f2-)"
+        release_name="gnolang-self-runner-${size}"
+
+        echo ""
+        echo "════════════════════════"
+        echo "Deploying: $release_name"
+        echo "════════════════════════"
+        
+        # ${helm_template_location}
+        helm_values=$(helm template ${size} ../../arc/helm --values ../../karpenter/node-pools/${size}/arc-runner-values-${size}.yaml)
+
+        # Install arc-runner helm release
+        helm upgrade --install $release_name \
+          oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set \
+          --version ${ARC_HELM_CHART_VERSION} \
+          --namespace arc-runner --create-namespace \
+          --set githubConfigUrl=${GITHUB_CONFIG_URL} \
+          --set githubConfigSecret.github_token=${GITHUB_PAT_TOKEN} \
+          --values <(echo "$helm_values") \
+          --wait \
+          --timeout 5m
+      done
+      echo "Finished deployment of multiple Arc Runner helm releases"
+  purge-arc-runners:
+    run: |-
+      #!/bin/bash
+      set -e
+      
+      echo "Purging multiple Arc Runner releases"
+      
+      for size_env in $(printenv | grep '^ARC_RUNNER_SIZE_'); do
+        size="$(echo $size_env | cut -d= -f2-)"
+        release_name="gnolang-self-runner-${size}"
+
+        echo ""
+        echo "==============================="
+        echo "Removing Release: $release_name"
+        echo "==============================="
+        
+        helm uninstall ${release_name} --namespace arc-runner --wait
+      done
+      echo "Successfully removed Arc Runner helm releases"
+deployments:
+  arc-controller:
+    helm:
+      releaseName: arc
+      chart:
+        name: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set-controller
+        version: ${ARC_HELM_CHART_VERSION}
+    namespace: arc-system
+  arc-runner:
+    helm:
+      releaseName: gnolang-self-runner
+      chart:
+        name: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
+        version: ${ARC_HELM_CHART_VERSION}
+      values:
+        githubConfigUrl: ${GITHUB_CONFIG_URL}
+        githubConfigSecret:
+          github_token: ${GITHUB_PAT_TOKEN}
+          # github_app_id: ${GITHUB_APP_ID}
+          # github_app_installation_id: ${GITHUB_APP_INSTALLATION_ID}
+          # github_app_private_key: |
+          #   ${GITHUB_APP_PRIVATE_KEY}
+      valuesFiles:
+      - ../../arc/arc-runner-set-values.yaml
+    namespace: arc-runner
+  dagger:
+    helm:
+      releaseName: dagger-engine
+      chart:
+        name: oci://registry.dagger.io/dagger-helm
+        version: ${DAGGER_HELM_CHART_VERSION}
+      valuesFiles:
+      - ../../arc/dagger-engine/tolerations.yaml
+    namespace: dagger
+  buildkit:
+    kubectl:
+      kustomize: true
+      manifests:
+      - ../../buildkit
+  karpenter-node-pools:
+    kubectl:
+      kustomize: true
+      manifests:
+      - ../../karpenter
+hooks:
+- command: |-
+    devspace run-pipeline purge-arc-runners
+  events: ["before:purge"]
+
+- command: kubectl
+  args: ["delete", "autoscalinglisteners", "-n", "arc-system", "--all", "--wait=false"]
+  events: ["after:purge"]
+
+- command: kubectl
+  args: ["delete", "ns", "dagger", "buildkit", "arc-runner", "arc-system", "--wait=false"]
+  events: ["after:purge"]
+
+- command: kubectl
+  args: ["wait","--for=create","--timeout=300s",
+    "deployment","-l","app.kubernetes.io/name=gha-rs-controller","-n","arc-system"]
+  events: ["before:deploy:arc-runner"]

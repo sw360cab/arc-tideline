@@ -10,6 +10,7 @@ in the `runs-on` directing in the GH Actions manifest.
 A placeholder application and relative GH workflows are provided to show of this can be
 seamlessly usded in any dev/production environment.
 
+
 ## Architecture
 
 The whole system while be composed on 3 pilars:
@@ -43,12 +44,19 @@ As a placeholder 3 classes are provided, they should be tuned but aim to mimic d
 - large
 - xlarge
 
-## Peristence
+## Persistence
 
 For specifik cases (e.g. building Docker images) a persistent layer provided with Buildkit can be added.
 it allows to have consistent Buildkit caches across multiple runs of any workload using any Docker buliding procedure.
 
-## Deploy in Dev/Test Environment
+## Running
+
+### Prerequisites
+
+- authentication too Github API to target the Github Repository via Token or Github App. See [Authenticating ARC to the GitHub API - GitHub Docs](https://docs.github.com/en/actions/how-tos/manage-runners/use-actions-runner-controller/authenticate-to-the-api?apiVersion=2022-11-28#authenticating-arc-with-a-fine-grained-personal-access-token "Authenticating ARC to the GitHub API - GitHub Docs")
+- a target Kubernetes cluster
+
+### Deploy in Dev/Test Environment
 
 - Run
 
@@ -57,7 +65,7 @@ cd cluster/devspace
 devspace deploy
 ```
 
-## Deploy in Prod Environment
+### Deploy in Prod Environment
 
 - Run (including Karpenter node pools)
 
@@ -66,7 +74,7 @@ cd cluster/devspace
 devspace run-pipeline deploy-prod
 ```
 
-## Cleanup
+### Cleanup
 
 - Run
 
