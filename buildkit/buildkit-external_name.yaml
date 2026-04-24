@@ -1,0 +1,10 @@
+# Enable usage of `buildkit` name when reffering to buildkit StatefulSet 
+# in ar runners e.g. tcp://buildkit:1234
+apiVersion: v1
+kind: Service
+metadata:
+  name: buildkit
+  namespace: arc-runner
+spec:
+  type: ExternalName
+  externalName: buildkit.buildkit.svc.cluster.local

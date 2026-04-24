@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- buildkit-ns.yaml
+- buildkit-stateful-set.yaml
+- buildkit-svc.yaml
+# NOTE: created inside ARC ns
+- buildkit-external_name.yaml
+
+
+configMapGenerator:
+- name: buildkit-config
+  namespace: buildkit
+  options:
+    disableNameSuffixHash: true
+  files:
+  - config/buildkitd.toml

@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: buildkit
+  namespace: buildkit
+spec:
+  serviceName: buildkit
+  replicas: 1
+  selector:
+    matchLabels:
+      app: buildkit
+  template:
+    metadata:
+      labels:
+        app: buildkit
+    spec:
+      containers:
+        - name: buildkit
+          image: moby/buildkit:latest
+          args:
+            - --addr
+            - tcp://0.0.0.0:1234
+            - --config
+            - /etc/buildkit/buildkitd.toml
+          ports:
+            - containerPort: 1234
+          volumeMounts:
+            - name: buildkit-state
+              mountPath: /var/lib/buildkit
+            - name: buildkit-config
+              mountPath: /etc/buildkit
+              readOnly: true
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              cpu: "2"
+              memory: 4Gi
+            limits:
+              cpu: "4"
+              memory: 8Gi
+          readinessProbe:
+            exec:
+              command: ["buildctl", "--addr", "tcp://127.0.0.1:1234", 
+                "debug", "workers"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        - name: buildkit-config
+          configMap:
+            name: buildkit-config
+        - name: buildkit-state
+          hostPath:
+            path: /var/lib/buildkit
+            type: DirectoryOrCreate
+  # volumeClaimTemplates:
+  #   - metadata:
+  #       name: buildkit-state
+  #     spec:
+  #       accessModes: ["ReadWriteOnce"]
+  #       resources:
+  #         requests:
+  #           storage: 100Gi
