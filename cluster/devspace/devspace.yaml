@@ -33,7 +33,7 @@ pipelines:
       
       for size_env in $(printenv | grep '^ARC_RUNNER_SIZE_'); do
         size="$(echo $size_env | cut -d= -f2-)"
-        release_name="gnolang-self-runner-${size}"
+        release_name="custom-ci-self-runner-${size}"
 
         echo ""
         echo "════════════════════════"
@@ -64,7 +64,7 @@ pipelines:
       
       for size_env in $(printenv | grep '^ARC_RUNNER_SIZE_'); do
         size="$(echo $size_env | cut -d= -f2-)"
-        release_name="gnolang-self-runner-${size}"
+        release_name="custom-ci-self-runner-${size}"
 
         echo ""
         echo "==============================="
@@ -84,7 +84,7 @@ deployments:
     namespace: arc-system
   arc-runner:
     helm:
-      releaseName: gnolang-self-runner
+      releaseName: custom-ci-self-runner
       chart:
         name: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
         version: ${ARC_HELM_CHART_VERSION}
