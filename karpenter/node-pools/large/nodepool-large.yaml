@@ -1,0 +1,48 @@
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: generic-large
+spec:
+  template:
+    metadata:
+      labels:
+        type: karpenter
+        dagger.sh/engine: "true"
+    spec:
+      # Reference Karpenter Node Class
+      nodeClassRef:
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
+        name:  sw360cab-nodeclass
+      # intanciable Nodes requirements
+      requirements:
+        - key: karpenter.sh/capacity-type # Default on-demand
+          operator: In
+          values: ["on-demand", "spot"]
+        - key: karpenter.k8s.aws/instance-category
+          operator: In
+          values: ["c", "m", "r"]
+        - key: karpenter.k8s.aws/instance-size
+          operator: In
+          values: [large, xlarge]
+        - key: "karpenter.k8s.aws/instance-generation" # Filter out older instance types
+          operator: Gt
+          values: ["4"]
+        - key: kubernetes.io/arch
+          operator: In
+          values: ["amd64"]
+        - key: kubernetes.io/os
+          operator: In
+          values: ["linux"]
+      expireAfter: 4h
+      terminationGracePeriod: 20m
+  limits:
+    cpu: "100"
+    memory: 500Gi
+  disruption:
+    consolidationPolicy: WhenEmpty
+    consolidateAfter: 20m
+    budgets:
+    - nodes: "10%"
+      schedule: "30 0 * * *"
+      duration: 3h

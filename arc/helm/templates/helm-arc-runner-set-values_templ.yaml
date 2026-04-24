@@ -1,0 +1,74 @@
+# This template is used in the Helm chart to define Karpenter node pools for Arc runners
+# according to different potential sizes.
+# Dagger Engine is eanbled by default at the moment. It can become an option in the future.
+
+# maxRunners is the max number of runners the autoscaling runner set will scale up to.
+maxRunners: {{ .Values.maxRunners | default 20 }}
+
+template:
+  spec:
+    terminationGracePeriodSeconds: 0
+    nodeSelector:
+      karpenter.sh/nodepool: {{ .Values.nodePool }}
+    initContainers:
+    - name: dagger-cli
+      image: alpine:3
+      command:
+        - sh
+        - -o
+        - pipefail
+        - -exc
+        - |-
+          # sleep infinity
+          apk add curl
+          if [ ! -f $BIN_DIR/dagger ]
+          then
+            if ! curl --fail --silent --show-error https://dl.dagger.io/dagger/install.sh | sh; then
+              echo "Dagger CLI install failed"
+              exit 1
+            fi
+            $BIN_DIR/dagger version
+          fi
+      env:
+        - name: BIN_DIR
+          value: /opt/dagger/bin
+        - name: DAGGER_VERSION
+          value: {{ .Values.daggerVersion | default "latest" }}
+      volumeMounts:
+        - name: dagger-cli
+          mountPath: /opt/dagger/bin
+    containers:
+    - name: runner
+      image: ghcr.io/actions/actions-runner:2.333.0 # latest is fine too
+      command:
+        - bash
+        - -exc
+        - |-
+          sudo cp /opt/dagger/bin/dagger /bin/dagger
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends git-core curl
+          sudo rm -rf /var/lib/apt/lists/*
+          exec /home/runner/run.sh
+      env:
+        - name: _EXPERIMENTAL_DAGGER_RUNNER_HOST
+          value: unix:///var/run/dagger/engine.sock
+      volumeMounts:
+        - name: dagger-cli
+          mountPath: /opt/dagger/bin
+        - name: dagger-engine
+          mountPath: /var/run/dagger
+      resources:
+        limits:
+          cpu: {{ (((.Values.placement).resources).limits).cpu | default "1" }}
+          memory: {{ (((.Values.placement).resources).limits).memory | default "1Gi"}}
+        requests:
+          cpu: {{ (((.Values.placement).resources).requests).cpu | default "1" }}
+          memory: {{ (((.Values.placement).resources).requests).memory | default "500Mi"}}
+    volumes:
+    - name: dagger-cli
+      emptyDir: {}
+    # Dagger engine installed from Dagger's Helm chart, 
+    # which is configured to use hostPath for run volume
+    - name: dagger-engine
+      hostPath:
+        path: /var/run/dagger-dagger-engine-dagger-helm

@@ -1,0 +1,12 @@
+nodePool: generic-large
+maxRunners: 10
+daggerVersion: 0.19.6
+
+placement:
+  resources:
+    requests:
+      cpu: "3"
+      memory: 4Gi
+    limits:
+      cpu: "4"
+      memory: 7Gi

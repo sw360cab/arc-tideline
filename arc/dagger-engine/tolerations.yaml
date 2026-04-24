@@ -1,0 +1,8 @@
+engine:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: dagger.sh/engine
+                operator: Exists

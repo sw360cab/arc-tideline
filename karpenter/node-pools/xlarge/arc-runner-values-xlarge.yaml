@@ -1,0 +1,13 @@
+nodePool: xlarge-nodepool
+maxRunners: 3
+daggerVersion: 0.19.6
+
+# safe version would leave a little headroom for the system daemons:
+placement:
+  resources:
+    requests:
+      cpu: "7"
+      memory: "15Gi"
+    limits:
+      cpu: "7"
+      memory: "15Gi"

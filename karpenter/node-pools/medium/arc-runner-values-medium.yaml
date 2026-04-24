@@ -1,0 +1,12 @@
+nodePool: spot-medium
+maxRunners: 20
+daggerVersion: 0.19.6
+
+placement:
+  resources:
+    requests:
+      cpu: "1"
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi

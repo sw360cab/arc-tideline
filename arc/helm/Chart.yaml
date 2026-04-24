@@ -1,0 +1,13 @@
+apiVersion: v2
+name: arc-runner-valset
+description: A local chart to generate Helm values for multiple Arc runners
+
+version: 0.1.0
+
+maintainers:
+  - name: Sergio Matone
+
+keywords:
+  - customci
+  - arc
+  - nodepool
