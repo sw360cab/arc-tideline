@@ -10,7 +10,6 @@ in the `runs-on` directing in the GH Actions manifest.
 A placeholder application and relative GH workflows are provided to show of this can be
 seamlessly usded in any dev/production environment.
 
-
 ## Architecture
 
 The whole system while be composed on 3 pilars:
@@ -18,7 +17,7 @@ The whole system while be composed on 3 pilars:
 - ARC system: allowing deployment of self-hosted runner on this cluster
 - Dagger system: a DaemonSet running the Dagger engine on each allocated ARC runner
 - Buildkit: providing consistent caches across multiple runs of building of Docker images
-- Karpetner: handling scaling, upsizing, downszing of node pools which hanldes the runner according to specific policies
+- Karpenter: handling scaling, upsizing, downszing of node pools which hanldes the runner according to specific policies
 
 ## Provisioning
 
