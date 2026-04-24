@@ -19,4 +19,4 @@ jobs:
 
       - name: Dagger Run Local
         run: |
-          dagger call -m run0 container-echo
+         dagger call -m daggerverse/run0 container-echo --string-arg hello,local!
