@@ -1,0 +1,19 @@
+name: Dagger on premise
+on:
+  workflow_dispatch:
+
+jobs:
+  dagger0:
+    name: dagger-basic-ci
+    runs-on: custom-ci-self-runner-large
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Dagger Run Generic
+        run: |
+          dagger call -m github.com/shykes/daggerverse/hello hello --giant --name internet
+
+      - name: Dagger Run Local
+        run: |
+          dagger call -m run0 container-echo
