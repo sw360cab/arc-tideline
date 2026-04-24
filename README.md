@@ -21,12 +21,23 @@ The whole system while be composed on 3 pilars:
 
 ## Provisioning
 
-Terraform plan provisioning by spining:
+Terraform plan provisioning by spinning:
 
 - one Kube cluster (EKS in this case but can be KinD locally for dev testing)
 - generic nodes for Karpenter scheduler
 
 See [Provisioning](./provisioning/README.md)
+
+### Local cluster (KinD)
+
+For local development a [KinD](https://kind.sigs.k8s.io/) cluster can be used is.
+The config at [cluster/kind/kind.yaml](./cluster/kind/kind.yaml) pre-labels the
+control-plane node with `dagger.sh/engine=true`, which is required by
+the Dagger engine DaemonSet's node affinity.
+
+```sh
+kind create cluster --name arc-ci --config=cluster/kind/kind.yaml
+```
 
 ## Deployment
 
