@@ -17,7 +17,7 @@ The whole system while be composed on 3 pilars:
 - ARC system: allowing deployment of self-hosted runner on this cluster
 - Dagger system: a DaemonSet running the Dagger engine on each allocated ARC runner
 - Buildkit: providing consistent caches across multiple runs of building of Docker images
-- Karpenter: handling scaling, upsizing, downszing of node pools which hanldes the runner according to specific policies
+- Karpenter (on AWS EKS cluster): handling scaling, upsizing, downszing of node pools which hanldes the runner according to specific policies
 
 ## Provisioning
 
@@ -55,7 +55,7 @@ it allows to have consistent Buildkit caches across multiple runs of any workloa
 - authentication too Github API to target the Github Repository via Token or Github App. See [Authenticating ARC to the GitHub API - GitHub Docs](https://docs.github.com/en/actions/how-tos/manage-runners/use-actions-runner-controller/authenticate-to-the-api?apiVersion=2022-11-28#authenticating-arc-with-a-fine-grained-personal-access-token "Authenticating ARC to the GitHub API - GitHub Docs")
 - a target Kubernetes cluster
 
-### Deploy in Dev/Test Environment
+### Deploy in Local Environment
 
 - Run
 
@@ -64,7 +64,7 @@ cd cluster/devspace
 devspace deploy
 ```
 
-### Deploy in Prod Environment
+### Deploy in AWS EKS Kube Environment
 
 - Run (including Karpenter node pools)
 

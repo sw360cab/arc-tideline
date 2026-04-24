@@ -5,6 +5,9 @@ on:
 jobs:
   Explore-GitHub-Actions:
     # You need to use the INSTALLATION_NAME used in Arc controller
-    runs-on: custom-ci-self-runner-medium
+    ## local runner
+    runs-on: custom-ci-self-runner
+    ## autoscaled runner
+    # runs-on: custom-ci-self-runner-medium
     steps:
     - run: echo "🎉 This job uses runner scale set runners!"

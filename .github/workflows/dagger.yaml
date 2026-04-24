@@ -5,7 +5,10 @@ on:
 jobs:
   dagger0:
     name: dagger-basic-ci
-    runs-on: custom-ci-self-runner-large
+    ## local runner
+    runs-on: custom-ci-self-runner
+    ## autoscaled runner
+    # runs-on: custom-ci-self-runner-large
     steps:
       - name: Checkout
         uses: actions/checkout@v5
